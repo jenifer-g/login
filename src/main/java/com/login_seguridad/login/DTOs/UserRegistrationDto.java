@@ -18,7 +18,6 @@ public class UserRegistrationDto {
     private String email;
 
     @NotNull(message="La contraseña es obligatoria")
-    @NotBlank(message="La contraseña es obligatoria")
     @Size(min=8, message="La conntraseña debe de contener mímino 8 caracteres")
     @Pattern(regexp="^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*?&]{8,}$", message="La contraseña debe contener números, letras y al menos un caracter especial")
     private String password;

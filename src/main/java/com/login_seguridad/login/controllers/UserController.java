@@ -20,12 +20,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.login_seguridad.login.DTOs.NewPassword;
 import com.login_seguridad.login.DTOs.UserLoginDto;
 import com.login_seguridad.login.DTOs.UserRegistrationDto;
 import com.login_seguridad.login.services.UserService;
 
 import jakarta.validation.Valid;
-
 
 
 @RestController
@@ -80,15 +80,32 @@ final UserService userService;
         }
     }
 
+    // cambiar contraseña cuando está loggeado
     @PutMapping("users/{id}/password")
-    public ResponseEntity<?> putMethodName(@PathVariable String id, @RequestBody String password) {
+    public ResponseEntity<?> updatePassword(@PathVariable String id, @RequestBody @Valid NewPassword password) {
         try {
-            userService.updatePassword(id, password);
+            userService.updatePassword(id, password.getPassword());
             return ResponseEntity.ok("La contraseña se actualizó correctamente");
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    // cambiar contraseña cuando la olvidó
+    // ingresar correo
+    // validar que exista
+    // si existe enviamos codigo o enlace de verificacion
+    // si el codigo es correcto actualizamos
+
+    @GetMapping("/logout")
+    public ResponseEntity<?> logout() {
+        try {
+            ResponseCookie cookie = userService.logout();
+            return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body("Sesión cerrada correctamente");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    
 
     // en caso de que alguna de las anotaciones no se cumplan
     @ResponseStatus(HttpStatus.BAD_REQUEST)

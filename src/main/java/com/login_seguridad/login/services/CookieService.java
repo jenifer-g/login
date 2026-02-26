@@ -6,13 +6,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class CookieService {
     
-    public ResponseCookie configCookie(String token){
+    public ResponseCookie configCookie(String token, Integer expiration){
         return ResponseCookie.from("token", token)
         .httpOnly(true)
         .secure(false)
         .sameSite("Strict")
         .path("/")
-        .maxAge(60 * 15)
+        // .maxAge(60 * 15)
+        .maxAge(expiration)
         .build();
     }
 }

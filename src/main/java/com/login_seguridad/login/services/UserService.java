@@ -50,7 +50,7 @@ public class UserService {
         Authentication auth = authManager.authenticate(new UsernamePasswordAuthenticationToken(user.getEmail(), user.getPassword()));  
         if(auth.isAuthenticated()){ 
             String token = jwtService.generateToken(user.getEmail());
-            ResponseCookie cookie = this.cookieService.configCookie(token);
+            ResponseCookie cookie = this.cookieService.configCookie(token, 60*15);
 
             return cookie;
         }
@@ -85,14 +85,19 @@ public class UserService {
 
     }
 
-    public String updatePassword(String id, String Password){
-        
-        return "";
+    public void updatePassword(String id, String newPassword){
+        String passEncoded = encoder.encode(newPassword);
+        userRepository.updatePassword(id, passEncoded);
     }
 
     public void sendEmail2(String email){
         String token = jwtService.generateToken(email);
         mailService.sendEmail(email, token);
+
+    }
+
+    public ResponseCookie logout(){
+        return cookieService.configCookie(null, 0);
 
     }
 

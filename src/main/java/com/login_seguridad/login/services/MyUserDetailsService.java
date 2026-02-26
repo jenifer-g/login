@@ -12,7 +12,7 @@ import com.login_seguridad.login.repository.IUserRepository;
 @Service
 public class MyUserDetailsService implements UserDetailsService{ // como obtener los datos
 
-    private IUserRepository userRepository;
+    final IUserRepository userRepository;
 
     
     public MyUserDetailsService(IUserRepository userRepository) {

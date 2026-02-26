@@ -37,9 +37,19 @@ public class ICustomUserRepositoryImpl implements ICustomUserRepository{
 
     }
 
-    // @Override
-    // public boolean updateEmailVerified(Long id) {
-    //     throw new UnsupportedOperationException("Not supported yet.");
-    // }
-    
+    @Override
+    public void updatePassword(String id, String newPassword){
+        Query query = new Query(Criteria.where("_id").is(id));
+        Update update = new Update().set("password", newPassword);
+
+        UpdateResult res = mongoTemplate.updateFirst(query, update, User.class);
+
+        if(res.getMatchedCount()==0){
+            throw new RuntimeException("Usuario no encontrado");
+        }
+        if(res.getModifiedCount()==0){
+            throw new RuntimeException("Error al actualizar la contraseña");
+        }
+    }
+
 }
