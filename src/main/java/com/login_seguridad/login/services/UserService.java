@@ -6,13 +6,14 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.login_seguridad.login.DTOs.UserLoginDto;
 import com.login_seguridad.login.DTOs.UserRegistrationDto;
+import com.login_seguridad.login.models.TokenUser;
 import com.login_seguridad.login.models.User;
+import com.login_seguridad.login.repository.ITokenRepository;
 import com.login_seguridad.login.repository.IUserRepository;
 
 
@@ -26,15 +27,17 @@ public class UserService {
     final MailService mailService;
     final MyUserDetailsService userDetailsService;
     final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
+    final ITokenRepository tokenRepository;
 
 
-    public UserService(IUserRepository userRepository, AuthenticationManager authenticationManager, JWTService jwtService, CookieService cookieService, MailService mailService, MyUserDetailsService userDetailsService){
+    public UserService(IUserRepository userRepository, AuthenticationManager authenticationManager, JWTService jwtService, CookieService cookieService, MailService mailService, MyUserDetailsService userDetailsService, ITokenRepository tokenRepository){
         this.userRepository = userRepository; 
         this.authManager = authenticationManager;
         this.jwtService = jwtService;
         this.cookieService = cookieService;
         this.mailService = mailService;
         this.userDetailsService = userDetailsService;
+        this.tokenRepository = tokenRepository;
     }
 
     public List<User> getAllUsers(){
@@ -66,7 +69,7 @@ public class UserService {
             boolean emailVerified = userExists.isEmailVerified();
             if(emailVerified){
                 throw new RuntimeException("Ya existe un usuario registrado con este correo");
-            }else{ // si existe el correo pero no esta verificado entonces lanzamos excepcion y podra generar otro token
+            }else{ 
                 throw new RuntimeException("Verifica tu correo para poder iniciar sesión");
             }
         }
@@ -78,8 +81,9 @@ public class UserService {
         user.setPassword(encoder.encode(userInfo.getPassword()));
         user.setEmailVerified(false);
 
+        String token = jwtService.generateToken(userInfo.getEmail());
         // enviar correo de confirmacion
-        sendEmail2(userInfo.getEmail());
+        mailService.sendEmail(userInfo.getEmail(), token, "De click en el link para verificar su cuenta");
 
         return this.userRepository.save(user);
 
@@ -90,11 +94,6 @@ public class UserService {
         userRepository.updatePassword(id, passEncoded);
     }
 
-    public void sendEmail2(String email){
-        String token = jwtService.generateToken(email);
-        mailService.sendEmail(email, token);
-
-    }
 
     public ResponseCookie logout(){
         return cookieService.configCookie(null, 0);
@@ -102,17 +101,60 @@ public class UserService {
     }
 
     public void verifyEmail(String token){
-        try {
-            String email = jwtService.extractSubject(token);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
         
-            if(!jwtService.validateToken(token, userDetails) || jwtService.isTokenExpired(token)){
-                throw new RuntimeException("Token inválidos");
-            }
-            userRepository.updateEmailVerified(email);
-        } catch (RuntimeException e) {
+        String email = jwtService.extractSubject(token);
+         User user = userRepository.findByEmail(email);
+
+         if(user==null){
+            throw new RuntimeException("Usuario no encontrado");
+         }
+        
+        if(!jwtService.validateToken(token, user)){
+            throw new RuntimeException("Token inválido");
+        }
+
+        userRepository.updateEmailVerified(email);
+
+
+    }
+
+    public void forgotPassword(String email){
+     
+        User user = this.userRepository.findByEmail(email.trim().toLowerCase());
+
+      
+        if(user==null){
+            throw new RuntimeException("Correo inválido");
+        }
+        String token = jwtService.generateToken(email);
+        String userId = user.getId();
+        // insertamos el token con expiracion en la bd
+        TokenUser tokenObj = new TokenUser(userId, token);
+        this.tokenRepository.save(tokenObj);
+            
+        mailService.recoverPasswordEmail(user.getEmail(), token);
+
+    }
+
+    public boolean recoverPassword(String token, String newPassword){
+
+        String email = jwtService.extractSubject(token);
+
+        User user = userRepository.findByEmail(email);
+      
+        if(!jwtService.validateToken(token, user)){
             throw new RuntimeException("Token inválido");
         }
         
+        TokenUser tokenInfo = tokenRepository.findByTokenAndUsedFalse(token);
+        if(tokenInfo==null){
+            throw new RuntimeException("Token ya utilizado o invàlido");
+        }
+        this.updatePassword(user.getId(), newPassword);
+      
+        tokenInfo.setUsed(true);
+        tokenRepository.save(tokenInfo);
+        
+        return true;
     }
 }

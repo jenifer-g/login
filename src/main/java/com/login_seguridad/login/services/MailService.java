@@ -11,7 +11,8 @@ public class MailService {
 
     final JavaMailSender mailSender;
 
-    // @Value("${url_front}")
+    @Value("${url_front}")
+    private String urlFront;
     @Value("${url}")
     private String urlBase;
 
@@ -19,12 +20,26 @@ public class MailService {
         this.mailSender = javaMailSender;
     }
 
-    public void sendEmail(String emailUser, String token){
+    public void sendEmail(String emailUser, String token, String message){
         String subject = "Verifique su cuenta";
-        String url = urlBase+"/verifyEmail?token="+token;
-        // String url = urlBase+"/verifyEmail/"+token;
+        // String url = urlBase+"/verifyEmail?token="+token;
+        String url = urlFront+"/verifyEmail?token="+token;
 
-        String body = "Haga click en el enlace para verificar su cuenta "+url;
+        String body = message+" "+url;
+
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setTo(emailUser);
+        msg.setSubject(subject);
+        msg.setText(body);
+
+        mailSender.send(msg);
+    }
+    public void recoverPasswordEmail(String emailUser, String token){
+        String subject = "Restablecer contraseña";
+        // String url = urlBase+"/recoverPassword?token="+token;
+        String url = urlFront+"/recoverPassword?token="+token;
+
+        String body = "Haga click en el enlace para recuperar su contraseña "+url;
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(emailUser);
@@ -33,5 +48,7 @@ public class MailService {
 
         mailSender.send(message);
     }
+
+
 
 }

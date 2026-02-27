@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.login_seguridad.login.DTOs.EmailDto;
 import com.login_seguridad.login.DTOs.NewPassword;
 import com.login_seguridad.login.DTOs.UserLoginDto;
 import com.login_seguridad.login.DTOs.UserRegistrationDto;
@@ -70,7 +71,7 @@ final UserService userService;
         return "Si ves esto, estas autorizado";
     }
     
-    @GetMapping("/verifyEmail")
+    @GetMapping("/verifyEmail") 
     public ResponseEntity<?> verifyEmail(@RequestParam String token) {
         try {
             userService.verifyEmail(token);
@@ -90,11 +91,29 @@ final UserService userService;
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-    // cambiar contraseña cuando la olvidó
-    // ingresar correo
-    // validar que exista
-    // si existe enviamos codigo o enlace de verificacion
-    // si el codigo es correcto actualizamos
+
+    @PostMapping("/forgotPassword")
+    public ResponseEntity<String> forgotPassword(@RequestBody EmailDto emailDto) {
+        try {
+            userService.forgotPassword(emailDto.getEmail());
+            return ResponseEntity.ok("Enviamos un enlace de recuperación a tu correo");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/recoverPassword")
+    public ResponseEntity<String> recoverPassword(@RequestBody @Valid NewPassword infoResetPassword) {
+
+        try {
+            return  userService.recoverPassword(infoResetPassword.getToken(), infoResetPassword.getPassword()) ? 
+            ResponseEntity.ok("Contraseña actualizada correctamente") : ResponseEntity.badRequest().body("Hubo un error al actualizar la contraseña");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
+    }
+
 
     @GetMapping("/logout")
     public ResponseEntity<?> logout() {

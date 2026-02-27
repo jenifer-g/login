@@ -32,7 +32,7 @@ public class SecurityConfig {
         httpSecurity
             .csrf(customizer->customizer.disable())
             .authorizeHttpRequests(request->request
-            .requestMatchers("/signup", "/login", "/verifyEmail/**")
+            .requestMatchers("/signup", "/login", "/verifyEmail/**", "/forgotPassword", "/recoverPassword/**")
             .permitAll() // las unicas rutas que no necesitan autenticacion
             .anyRequest().authenticated()) // las demas sis
             .httpBasic(Customizer.withDefaults())

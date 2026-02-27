@@ -9,17 +9,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import com.login_seguridad.login.models.User;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
 @Service
 public class JWTService {
-    // eliminar estp
-    // private static final Key key = Keys.secretKeyFor(SignatureAlgorithm.ES256);
+    
     @Value("${jwt.secret}")
     private String secretKey;
-    // private final SecretKey key = Keys.hmacShaKeyFor(SECRE)
 
     private Key getSecretKey(){
         Key key = Keys.hmacShaKeyFor(secretKey.getBytes());
@@ -44,11 +44,19 @@ public class JWTService {
    
 
     public Claims extractAllClaims(String token){
-        return  Jwts.parser()
-                //.verifyWith(getSecretKey())
-        .setSigningKey(getSecretKey())
-        .build()
-        .parseSignedClaims(token).getPayload();
+        try {
+            return  Jwts.parser()
+            //.verifyWith(getSecretKey())
+            .setSigningKey(getSecretKey())
+            .build()
+            .parseSignedClaims(token).getPayload();
+            
+        } catch (io.jsonwebtoken.security.SignatureException e) {
+            throw new RuntimeException("Firma inválida");
+            // excepciones para que muestre mensajes mas cortos
+        }catch(io.jsonwebtoken.ExpiredJwtException e){
+            throw new RuntimeException("El token ha expirado");
+        }
         
     }
     public String extractSubject(String token){
@@ -63,6 +71,12 @@ public class JWTService {
         String name = extractSubject(token);
         
         return (name.equals(userDetails.getUsername()) && ! isTokenExpired(token));
+        
+    }
+    public boolean validateToken(String token, User user) {
+
+        String name = extractSubject(token);
+        return (name.equals(user.getEmail()) && ! isTokenExpired(token));
         
     }
    
