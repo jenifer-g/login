@@ -18,14 +18,12 @@ public class MyUserDetailsService implements UserDetailsService{ // como obtener
     public MyUserDetailsService(IUserRepository userRepository) {
         this.userRepository = userRepository;
     }
-    // public MyUserDetailsService(){}
 
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException { // unico metodo en donde le decimos a spring como obtener la información de un usuario real
         User user = userRepository.findByEmail(email); 
         if(user==null){
-            System.out.println("El usuario no existe");
             throw new UsernameNotFoundException("Usuario no encontrado");
         }
         return new UserPrincipal(user); // representacion estandar de un usuario en spring security

@@ -10,12 +10,22 @@ public class NewPassword {
     @Pattern(regexp="^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*?&]{8,}$", message="La contraseña debe contener números, letras y al menos un caracter especial")
     private String password;
 
+    private String token;
+
     public String getPassword() {
         return password;
     }
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
 

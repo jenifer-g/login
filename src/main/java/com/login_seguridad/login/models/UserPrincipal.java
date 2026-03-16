@@ -12,8 +12,13 @@ public class UserPrincipal implements UserDetails{ // este ya es el obj que repr
 
     final User user;
 
+   
     public UserPrincipal(User user){
         this.user = user;
+    }
+
+    public String getId(){
+        return user.getId();
     }
 
     @Override

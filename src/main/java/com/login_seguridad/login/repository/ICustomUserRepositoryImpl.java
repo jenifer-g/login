@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import com.login_seguridad.login.models.User;
 import com.mongodb.client.result.UpdateResult;
+// import com.mongodb.client.result.UpdateResult;
 
 @Repository
 public class ICustomUserRepositoryImpl implements ICustomUserRepository{
@@ -21,7 +22,7 @@ public class ICustomUserRepositoryImpl implements ICustomUserRepository{
 
 
     @Override
-    public void updateEmailVerified(String email) {
+    public boolean updateEmailVerified(String email) {
         Query query = new Query(Criteria.where("email").is(email));
 
         Update update = new Update().set("emailVerified", true);
@@ -29,12 +30,10 @@ public class ICustomUserRepositoryImpl implements ICustomUserRepository{
         UpdateResult res = mongoTemplate.updateFirst(query, update, User.class);
 
         if(res.getMatchedCount()==0){
-            throw new RuntimeException("Usuario no encontrado");
+            throw new RuntimeException("No se encontró el email");
         }
-        if(res.getModifiedCount()==0){
-            throw new RuntimeException("Error al actualizar el registro, vuelva a verificar su email");
-        }
-
+        
+        return true;
     }
 
     @Override
@@ -45,11 +44,14 @@ public class ICustomUserRepositoryImpl implements ICustomUserRepository{
         UpdateResult res = mongoTemplate.updateFirst(query, update, User.class);
 
         if(res.getMatchedCount()==0){
-            throw new RuntimeException("Usuario no encontrado");
+            throw new RuntimeException("No se encontró el email");
         }
+        
         if(res.getModifiedCount()==0){
-            throw new RuntimeException("Error al actualizar la contraseña");
+            throw new RuntimeException("Hubo un error al verificar tu correo");
         }
+
+        mongoTemplate.updateFirst(query, update, User.class);
     }
 
 }

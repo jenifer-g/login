@@ -2,7 +2,7 @@ package com.login_seguridad.login.repository;
 
 public interface  ICustomUserRepository {
 
-    void updateEmailVerified(String email);
+    boolean updateEmailVerified(String email);
     void updatePassword(String id, String newPassword);
     
 }
