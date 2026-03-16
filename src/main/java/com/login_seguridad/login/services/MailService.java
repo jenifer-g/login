@@ -49,6 +49,21 @@ public class MailService {
         mailSender.send(message);
     }
 
+    public void sendMfaEmail(String emailUser, int code){
+        String subject = "Código de autenticación";
+        // String url = urlBase+"/recoverPassword?token="+token;
+
+        String body = "Este es tu código para iniciar sesión: "+code;
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(emailUser);
+        message.setSubject(subject);
+        message.setText(body);
+
+        mailSender.send(message);
+
+    }
+
 
 
 }

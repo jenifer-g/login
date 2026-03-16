@@ -24,6 +24,7 @@ import com.login_seguridad.login.DTOs.EmailDto;
 import com.login_seguridad.login.DTOs.NewPassword;
 import com.login_seguridad.login.DTOs.UserLoginDto;
 import com.login_seguridad.login.DTOs.UserRegistrationDto;
+import com.login_seguridad.login.DTOs.VerifyCode;
 import com.login_seguridad.login.services.UserService;
 
 import jakarta.validation.Valid;
@@ -40,20 +41,35 @@ final UserService userService;
     
    
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody UserLoginDto user) {
+    public ResponseEntity<?> primaryAuthentication(@RequestBody UserLoginDto user) {
         try {
-            ResponseCookie cookie = userService.loginUser(user);
-            if(cookie==null){
+            String token = userService.primaryAuthentication(user);
+            if(token==null){
 
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email o contraseña incorrectos");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciales incorrectas");
             }
-            return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body("Login exitoso");
-        
-            
+
+            return ResponseEntity.ok(Map.of("token", token));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    @PostMapping("/login/code")
+    public ResponseEntity<String> verifyAuthCode(@RequestBody VerifyCode verifyCode) {
+        try {
+      
+            ResponseCookie cookie = userService.verifyAuthCode(verifyCode.getCode(), verifyCode.getToken());
+
+            if(cookie == null){
+                return ResponseEntity.badRequest().body("Error al autenticar");
+            }
+       
+            return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body("Login exitoso");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("");
+        }
+    }
+    
 
     @PostMapping("/signup")
     public ResponseEntity<?> registrar(@Valid @RequestBody UserRegistrationDto user) {

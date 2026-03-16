@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import com.login_seguridad.login.models.User;
+import com.login_seguridad.login.DTOs.UserDto;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -73,8 +73,7 @@ public class JWTService {
         return (name.equals(userDetails.getUsername()) && ! isTokenExpired(token));
         
     }
-    public boolean validateToken(String token, User user) {
-
+    public boolean validateToken(String token, UserDto user) {
         String name = extractSubject(token);
         return (name.equals(user.getEmail()) && ! isTokenExpired(token));
         
